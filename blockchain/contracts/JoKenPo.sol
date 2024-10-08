@@ -81,6 +81,8 @@ contract JoKenPo is IJoKenPo {
     ) external payable returns (string memory) {
         require(msg.value >= bid, "Invalid bid");
         require(msg.sender != owner, "Owner cannot play");
+        require(msg.sender != player1, "Wait the another player");
+        require(newOption != JKPLibrary.Options.NONE, "Invalid choice");
 
         if (choice1 == JKPLibrary.Options.NONE) {
             choice1 = newOption;
