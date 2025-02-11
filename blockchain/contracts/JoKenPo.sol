@@ -16,7 +16,7 @@ contract JoKenPo {
 
     Options private choice1 = Options.NONE;
     address private player1;
-    address payable private owner;
+    address payable public immutable owner;
     uint private bid = 0.01 ether;
     uint8 private commission = 10; // percent
     string private result = "";
