@@ -14,20 +14,23 @@ export function NavbarHeader({ isAuthenticated }: NavbarHeaderProps) {
   return (
     <nav>
       <ul className="flex items-center gap-4 text-lg">
-        <li>
-          <Link
-            href="/"
-            className={`py-1 ${pathname === '/' ? 'border-b-2' : 'hover:border-b-2'}`}
-          >
-            Home
-          </Link>
-        </li>
-        <li>
-          <Link href="#" className="py-1 hover:border-b-2">
-            About
-          </Link>
-        </li>
-        {isAuthenticated ? (
+        {!isAuthenticated ? (
+          <>
+            <li>
+              <Link
+                href="/"
+                className={`py-1 ${pathname === '/' ? 'border-b-2' : 'hover:border-b-2'}`}
+              >
+                Home
+              </Link>
+            </li>
+            <li>
+              <Link href="#" className="py-1 hover:border-b-2">
+                About
+              </Link>
+            </li>
+          </>
+        ) : (
           <li>
             <button
               onClick={logout}
@@ -36,7 +39,7 @@ export function NavbarHeader({ isAuthenticated }: NavbarHeaderProps) {
               Logout
             </button>
           </li>
-        ) : null}
+        )}
       </ul>
     </nav>
   )
