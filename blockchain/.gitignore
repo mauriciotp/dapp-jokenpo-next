@@ -17,3 +17,6 @@ node_modules
 ignition/deployments/chain-31337
 # Hardhat Ignition folder for deployments against Sepolia test network
 ignition/deployments/chain-11155111
+
+# vscode
+.vscode
