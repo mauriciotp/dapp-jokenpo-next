@@ -29,8 +29,22 @@ export const getResult = async () => {
   return result
 }
 
+export const getBid = async () => {
+  const bid = await contract.read.getBid()
+
+  return bid
+}
+
 export const getLeaderBoard = async () => {
   const leaderBoard = await contract.read.getLeaderBoard()
 
   return leaderBoard
+}
+
+export const waitForTransactionReceipt = async (hash: `0x${string}`) => {
+  const txReceipt = await publicClient.waitForTransactionReceipt({
+    hash,
+  })
+
+  return txReceipt
 }

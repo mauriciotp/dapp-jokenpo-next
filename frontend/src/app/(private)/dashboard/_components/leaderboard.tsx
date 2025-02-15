@@ -1,7 +1,25 @@
-import { getLeaderBoard } from '@/data/blockchain/actions/contract/read-actions'
+'use client'
 
-export async function LeaderBoard() {
-  const leaderBoard = await getLeaderBoard()
+import { useWalletActionsContext } from '@/contexts/wallet-actions-context'
+import { getLeaderBoard } from '@/data/blockchain/actions/contract/read-actions'
+import { useEffect, useState } from 'react'
+
+interface Player {
+  wallet: `0x${string}`
+  wins: number
+}
+
+export function LeaderBoard() {
+  const [leaderBoard, setLeaderBoard] = useState<readonly Player[] | null>(null)
+  const { txStatus } = useWalletActionsContext()
+
+  useEffect(() => {
+    ;(async () => {
+      const leaderBoard = await getLeaderBoard()
+
+      setLeaderBoard(leaderBoard)
+    })()
+  }, [txStatus])
 
   return (
     <div className="flex-1">
@@ -15,14 +33,27 @@ export async function LeaderBoard() {
             </tr>
           </thead>
           <tbody>
-            {leaderBoard.map((player) => (
-              <tr key={player.wallet}>
+            {leaderBoard ? (
+              leaderBoard.map((player) => (
+                <tr key={player.wallet}>
+                  <td className="border-y border-gray-300 p-2">
+                    {player.wallet}
+                  </td>
+                  <td className="border-y border-gray-300 p-2">
+                    {player.wins}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
                 <td className="border-y border-gray-300 p-2">
-                  {player.wallet}
+                  <p>...</p>
                 </td>
-                <td className="border-y border-gray-300 p-2">{player.wins}</td>
+                <td className="border-y border-gray-300 p-2">
+                  <p>...</p>
+                </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

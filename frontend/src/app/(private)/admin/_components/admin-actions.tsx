@@ -11,10 +11,12 @@ export function AdminActions() {
 
   async function handleChangeBid() {
     await changeBid(bid)
+    setBid('')
   }
 
   async function handleChangeCommission() {
     await changeCommission(commission)
+    setCommission('')
   }
 
   return (
@@ -25,6 +27,7 @@ export function AdminActions() {
         </label>
         <div className="flex items-stretch">
           <Input
+            value={bid}
             onChange={(e) => setBid(e.target.value)}
             id="bid"
             valueType="wei"
@@ -43,6 +46,7 @@ export function AdminActions() {
         </label>
         <div className="flex items-stretch">
           <Input
+            value={commission}
             onChange={(e) => setCommission(e.target.value)}
             id="commission"
             valueType="%"

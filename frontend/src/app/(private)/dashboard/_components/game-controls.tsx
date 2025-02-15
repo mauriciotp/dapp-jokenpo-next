@@ -7,16 +7,11 @@ import Image from 'next/image'
 import { useEffect, useState } from 'react'
 
 export function GameControls() {
-  const [result, setResult] = useState('')
-  const [txStatus, setTxStatus] = useState<'success' | 'reverted'>()
-  const { play } = useWalletActionsContext()
+  const [result, setResult] = useState<string | null>(null)
+  const { play, isSubmittingTx, error, txStatus } = useWalletActionsContext()
 
   async function handlePlay(option: Options) {
-    const txReceipt = await play(option)
-
-    const txStatus = txReceipt.status
-
-    setTxStatus(txStatus)
+    await play(option)
   }
 
   useEffect(() => {
@@ -34,9 +29,30 @@ export function GameControls() {
         <h2 className="mb-2 text-xl font-bold text-blue-500">
           Current Status:
         </h2>
-        <div className="mb-2 rounded border border-green-300 bg-green-200 p-4 text-black">
-          {result ? <p>{result}</p> : <p>Nobody played yet.</p>}
-        </div>
+        {isSubmittingTx ? (
+          <div className="mb-2 rounded border border-gray-300 bg-gray-200 p-4 text-black">
+            <p>Making play, please wait...</p>
+          </div>
+        ) : error ? (
+          <div className="mb-2 rounded border border-red-300 bg-red-200 p-4 text-black">
+            <p>{error.details}</p>
+          </div>
+        ) : txStatus !== 'reverted' ? (
+          <div className="mb-2 rounded border border-green-300 bg-green-200 p-4 text-black">
+            {result ? (
+              <p>{result}</p>
+            ) : result === '' ? (
+              <p>Nobody played yet.</p>
+            ) : (
+              <p>Loading...</p>
+            )}
+          </div>
+        ) : (
+          <div className="mb-2 rounded border border-red-300 bg-red-200 p-4 text-black">
+            <p>Transaction reverted!</p>
+          </div>
+        )}
+
         <h2 className="mb-2 text-xl font-bold text-blue-500">
           Start a new game:
         </h2>
