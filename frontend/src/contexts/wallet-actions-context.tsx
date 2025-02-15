@@ -7,6 +7,7 @@ import {
   custom,
   EIP1193Provider,
   getContract,
+  parseEther,
   publicActions,
   RequestAddressesReturnType,
   TransactionReceipt,
@@ -18,8 +19,10 @@ import { Options } from '@/data/types'
 
 interface WalletActionsContextProps {
   isMetamaskInstalled: boolean
-  play: (option: Options) => Promise<TransactionReceipt>
   requestAddresses: () => Promise<RequestAddressesReturnType>
+  play: (option: Options) => Promise<TransactionReceipt>
+  changeBid: (newBid: string) => Promise<TransactionReceipt>
+  changeCommission: (newCommission: string) => Promise<TransactionReceipt>
 }
 
 const WalletActionsContext = createContext<WalletActionsContextProps>(
@@ -41,40 +44,40 @@ export function WalletActionsProvider({
     }
   }, [ethereum])
 
-  const walletClient = useMemo(() => {
+  const client = useMemo(() => {
     if (ethereum) {
       return createWalletClient({
         chain: sepolia,
         transport: custom(ethereum),
-      })
+      }).extend(publicActions)
     }
     return null
   }, [ethereum])
 
   const contract = useMemo(() => {
-    if (walletClient) {
+    if (client) {
       return getContract({
         abi,
         address: `0x${env.NEXT_PUBLIC_CONTRACT_ADDRESS}`,
-        client: walletClient,
+        client,
       })
     }
     return null
-  }, [walletClient])
+  }, [client])
 
   const requestAddresses = async () => {
-    if (!walletClient) throw new Error('Wallet client not initialized')
+    if (!client) throw new Error('Wallet client not initialized')
 
-    const addresses = await walletClient.requestAddresses()
+    const addresses = await client.requestAddresses()
 
     return addresses
   }
 
   const play = async (option: Options) => {
-    if (!walletClient || !contract)
+    if (!client || !contract)
       throw new Error('Wallet client or contract not initialized')
 
-    const [address] = await walletClient.getAddresses()
+    const [address] = await client.getAddresses()
 
     const bid = await contract.read.getBid()
 
@@ -83,18 +86,58 @@ export function WalletActionsProvider({
       value: bid,
     })
 
-    const txReceipt = await walletClient
-      .extend(publicActions)
-      .waitForTransactionReceipt({
-        hash,
-      })
+    const txReceipt = await client.waitForTransactionReceipt({
+      hash,
+    })
+
+    return txReceipt
+  }
+
+  const changeBid = async (newBid: string) => {
+    if (!client || !contract)
+      throw new Error('Wallet client or contract not initialized')
+
+    const [address] = await client.getAddresses()
+
+    const hash = await contract.write.setBid([parseEther(newBid)], {
+      account: address,
+    })
+
+    const txReceipt = await client.waitForTransactionReceipt({
+      hash,
+    })
+
+    return txReceipt
+  }
+
+  const changeCommission = async (newCommission: string) => {
+    if (!client || !contract)
+      throw new Error('Wallet client or contract not initialized')
+
+    const [address] = await client.getAddresses()
+
+    const formattedCommission = Math.round(parseFloat(newCommission))
+
+    const hash = await contract.write.setCommission([formattedCommission], {
+      account: address,
+    })
+
+    const txReceipt = await client.waitForTransactionReceipt({
+      hash,
+    })
 
     return txReceipt
   }
 
   return (
     <WalletActionsContext
-      value={{ isMetamaskInstalled, play, requestAddresses }}
+      value={{
+        isMetamaskInstalled,
+        play,
+        requestAddresses,
+        changeBid,
+        changeCommission,
+      }}
     >
       {children}
     </WalletActionsContext>

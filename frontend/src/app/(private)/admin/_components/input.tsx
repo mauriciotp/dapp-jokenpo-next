@@ -2,12 +2,11 @@ import { InputHTMLAttributes } from 'react'
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   valueType: string
-  buttonText: string
 }
 
-export function Input({ id, buttonText, valueType, ...props }: InputProps) {
+export function Input({ id, valueType, ...props }: InputProps) {
   return (
-    <div className="flex items-stretch">
+    <>
       <input
         {...props}
         id={id}
@@ -17,9 +16,6 @@ export function Input({ id, buttonText, valueType, ...props }: InputProps) {
       <span className="bg-gray-700 px-4 py-3 text-lg font-bold">
         {valueType}
       </span>
-      <button className="rounded-r bg-blue-600 px-4 py-3 text-lg">
-        {buttonText}
-      </button>
-    </div>
+    </>
   )
 }

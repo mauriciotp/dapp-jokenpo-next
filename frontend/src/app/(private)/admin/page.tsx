@@ -1,8 +1,8 @@
 import { verifySession } from '@/data/actions/auth/verify-session'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
-import { Input } from './_components/input'
 import { getOwnerAddress } from '@/data/blockchain/actions/contract/read-actions'
+import { AdminActions } from './_components/admin-actions'
 
 export default async function Admin() {
   const { address } = await verifySession()
@@ -27,23 +27,7 @@ export default async function Admin() {
           Change players&apos; bid and your commission.
         </p>
       </div>
-      <div className="flex items-center gap-4">
-        <div className="flex-1">
-          <label className="mb-2 block text-center text-lg" htmlFor="bid">
-            Bid (wei):
-          </label>
-          <Input id="bid" valueType="wei" buttonText="Change Bid" />
-        </div>
-        <div className="flex-1">
-          <label
-            className="mb-2 block text-center text-lg"
-            htmlFor="commission"
-          >
-            Commission (%):
-          </label>
-          <Input id="commission" valueType="%" buttonText="Change Commission" />
-        </div>
-      </div>
+      <AdminActions />
     </div>
   )
 }
