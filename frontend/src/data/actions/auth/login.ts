@@ -1,6 +1,6 @@
 'use server'
 
-import { getOwnerAddress } from '@/data/blockchain/web3-service'
+import { getOwnerAddress } from '@/data/blockchain/actions/contract/read-actions'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 

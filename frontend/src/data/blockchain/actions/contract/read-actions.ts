@@ -1,0 +1,36 @@
+'use server'
+
+import { createPublicClient, getContract, http } from 'viem'
+import { abi } from '../../abis/JoKenPo'
+import { env } from '@/env'
+import { sepolia } from 'viem/chains'
+import { serverEnv } from '@/serverEnv'
+
+const publicClient = createPublicClient({
+  chain: sepolia,
+  transport: http(`https://sepolia.infura.io/v3/${serverEnv.INFURA_SECRET}`),
+})
+
+const contract = getContract({
+  abi: abi,
+  address: `0x${env.NEXT_PUBLIC_CONTRACT_ADDRESS}`,
+  client: publicClient,
+})
+
+export const getOwnerAddress = async () => {
+  const address = await contract.read.owner()
+
+  return address
+}
+
+export const getResult = async () => {
+  const result = await contract.read.getResult()
+
+  return result
+}
+
+export const getLeaderBoard = async () => {
+  const leaderBoard = await contract.read.getLeaderBoard()
+
+  return leaderBoard
+}

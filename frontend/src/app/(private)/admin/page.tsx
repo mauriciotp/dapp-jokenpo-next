@@ -1,8 +1,8 @@
 import { verifySession } from '@/data/actions/auth/verify-session'
-import { getOwnerAddress } from '@/data/blockchain/web3-service'
 import Image from 'next/image'
 import { redirect } from 'next/navigation'
 import { Input } from './_components/input'
+import { getOwnerAddress } from '@/data/blockchain/actions/contract/read-actions'
 
 export default async function Admin() {
   const { address } = await verifySession()

@@ -1,12 +1,14 @@
 'use client'
 
 import Image from 'next/image'
-import { walletClient } from '@/data/blockchain/wallet-client'
 import { login } from '@/data/actions/auth/login'
+import { useWalletActionsContext } from '@/contexts/wallet-actions-context'
 
 export function Button() {
+  const { requestAddresses } = useWalletActionsContext()
+
   async function handleLogin() {
-    const [address] = await walletClient.requestAddresses()
+    const [address] = await requestAddresses()
 
     if (address) {
       await login(address)
