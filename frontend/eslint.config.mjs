@@ -16,6 +16,7 @@ const eslintConfig = [
       'next/typescript',
       'plugin:prettier/recommended',
       'plugin:tailwindcss/recommended',
+      'plugin:@tanstack/query/recommended',
     ],
     rules: {
       'prettier/prettier': [

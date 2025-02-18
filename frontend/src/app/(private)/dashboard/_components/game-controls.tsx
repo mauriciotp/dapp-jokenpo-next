@@ -3,24 +3,44 @@
 import { useWalletActionsContext } from '@/contexts/wallet-actions-context'
 import { getResult } from '@/data/blockchain/actions/contract/read-actions'
 import { Options } from '@/data/types'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
+import { ContractFunctionExecutionError } from 'viem'
 
 export function GameControls() {
-  const [result, setResult] = useState<string | null>(null)
-  const { play, isSubmittingTx, error, txStatus } = useWalletActionsContext()
+  const { play } = useWalletActionsContext()
+  const [customPlayError, setCustomPlayError] =
+    useState<ContractFunctionExecutionError | null>(null)
+  const queryClient = useQueryClient()
+
+  const { data: gameResult, isPending: isPendingGameResult } = useQuery({
+    queryKey: ['gameResult'],
+    queryFn: getResult,
+  })
+
+  const {
+    data: txReceipt,
+    mutate: playMutate,
+    isPending: isPendingPlay,
+  } = useMutation({
+    mutationKey: ['play'],
+    mutationFn: async (option: Options) => {
+      return await play(option)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['gameResult'] })
+    },
+    onError: (error) => {
+      if (error instanceof ContractFunctionExecutionError) {
+        setCustomPlayError(error)
+      }
+    },
+  })
 
   async function handlePlay(option: Options) {
-    await play(option)
+    playMutate(option)
   }
-
-  useEffect(() => {
-    ;(async () => {
-      const result = await getResult()
-
-      setResult(result)
-    })()
-  }, [txStatus])
 
   return (
     <div className="flex-1">
@@ -29,27 +49,27 @@ export function GameControls() {
         <h2 className="mb-2 text-xl font-bold text-blue-500">
           Current Status:
         </h2>
-        {isSubmittingTx ? (
+        {isPendingPlay && (
           <div className="mb-2 rounded border border-gray-300 bg-gray-200 p-4 text-black">
             <p>Making play, please wait...</p>
           </div>
-        ) : error ? (
+        )}
+
+        {!isPendingPlay && txReceipt?.status === 'reverted' && (
           <div className="mb-2 rounded border border-red-300 bg-red-200 p-4 text-black">
-            <p>{error.details}</p>
+            <p>{customPlayError?.details || 'Transaction reverted!'}</p>
           </div>
-        ) : txStatus !== 'reverted' ? (
+        )}
+
+        {!isPendingPlay && txReceipt?.status !== 'reverted' && (
           <div className="mb-2 rounded border border-green-300 bg-green-200 p-4 text-black">
-            {result ? (
-              <p>{result}</p>
-            ) : result === '' ? (
-              <p>Nobody played yet.</p>
-            ) : (
+            {isPendingGameResult ? (
               <p>Loading...</p>
+            ) : gameResult ? (
+              <p>{gameResult}</p>
+            ) : (
+              <p>Nobody played yet.</p>
             )}
-          </div>
-        ) : (
-          <div className="mb-2 rounded border border-red-300 bg-red-200 p-4 text-black">
-            <p>Transaction reverted!</p>
           </div>
         )}
 

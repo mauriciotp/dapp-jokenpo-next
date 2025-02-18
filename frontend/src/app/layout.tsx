@@ -4,6 +4,7 @@ import './globals.css'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { WalletActionsProvider } from '@/contexts/wallet-actions-context'
+import { TanstackProvider } from '@/providers/tanstack-provider'
 
 const roboto = Roboto({
   variable: '--font-roboto-sans',
@@ -26,15 +27,17 @@ export default function RootLayout({
       <body
         className={`${roboto.variable} bg-gray-900 font-sans text-white antialiased`}
       >
-        <WalletActionsProvider>
-          <div className="mx-auto max-w-screen-lg">
-            <Header />
-            <div className="flex h-[calc(100vh-80px)] flex-col items-center">
-              {children}
-              <Footer />
+        <TanstackProvider>
+          <WalletActionsProvider>
+            <div className="mx-auto max-w-screen-lg">
+              <Header />
+              <div className="flex h-[calc(100vh-80px)] flex-col items-center">
+                {children}
+                <Footer />
+              </div>
             </div>
-          </div>
-        </WalletActionsProvider>
+          </WalletActionsProvider>
+        </TanstackProvider>
       </body>
     </html>
   )

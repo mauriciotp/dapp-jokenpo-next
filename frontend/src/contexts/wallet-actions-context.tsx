@@ -23,9 +23,6 @@ import {
 
 interface WalletActionsContextProps {
   isMetamaskInstalled: boolean
-  isSubmittingTx: boolean
-  txStatus: 'success' | 'reverted' | null
-  error: ContractFunctionExecutionErrorType | null
   requestAddresses: () => Promise<RequestAddressesReturnType>
   play: (option: Options) => Promise<TransactionReceipt>
   changeBid: (newBid: string) => Promise<TransactionReceipt>
@@ -43,11 +40,6 @@ export function WalletActionsProvider({
 }) {
   const [isMetamaskInstalled, setIsMetamaskInstalled] = useState(false)
   const [ethereum, setEthereum] = useState<EIP1193Provider | null>(null)
-  const [isSubmittingTx, setIsSubmittingTx] = useState(false)
-  const [txStatus, setTxStatus] = useState<'success' | 'reverted' | null>(null)
-  const [error, setError] = useState<ContractFunctionExecutionErrorType | null>(
-    null,
-  )
 
   useEffect(() => {
     if (window.ethereum) {
@@ -90,7 +82,6 @@ export function WalletActionsProvider({
       throw new Error('Wallet client or contract not initialized')
 
     try {
-      setIsSubmittingTx(true)
       const [address] = await walletClient.getAddresses()
 
       const bid = await getBid()
@@ -102,16 +93,10 @@ export function WalletActionsProvider({
 
       const txReceipt = await waitForTransactionReceipt(hash)
 
-      setIsSubmittingTx(false)
-      setTxStatus(txReceipt.status)
-      setError(null)
-
       return txReceipt
     } catch (e) {
       const error = e as ContractFunctionExecutionErrorType
 
-      setIsSubmittingTx(false)
-      setError(error)
       throw error
     }
   }
@@ -121,7 +106,6 @@ export function WalletActionsProvider({
       throw new Error('Wallet client or contract not initialized')
 
     try {
-      setIsSubmittingTx(true)
       const [address] = await walletClient.getAddresses()
 
       const hash = await contract.write.setBid([parseEther(newBid)], {
@@ -130,16 +114,10 @@ export function WalletActionsProvider({
 
       const txReceipt = await waitForTransactionReceipt(hash)
 
-      setIsSubmittingTx(false)
-      setTxStatus(txReceipt.status)
-      setError(null)
-
       return txReceipt
     } catch (e) {
       const error = e as ContractFunctionExecutionErrorType
 
-      setIsSubmittingTx(false)
-      setError(error)
       throw error
     }
   }
@@ -149,7 +127,6 @@ export function WalletActionsProvider({
       throw new Error('Wallet client or contract not initialized')
 
     try {
-      setIsSubmittingTx(true)
       const [address] = await walletClient.getAddresses()
 
       const formattedCommission = Math.round(parseFloat(newCommission))
@@ -160,16 +137,10 @@ export function WalletActionsProvider({
 
       const txReceipt = await waitForTransactionReceipt(hash)
 
-      setIsSubmittingTx(false)
-      setTxStatus(txReceipt.status)
-      setError(null)
-
       return txReceipt
     } catch (e) {
       const error = e as ContractFunctionExecutionErrorType
 
-      setIsSubmittingTx(false)
-      setError(error)
       throw error
     }
   }
@@ -178,9 +149,6 @@ export function WalletActionsProvider({
     <WalletActionsContext
       value={{
         isMetamaskInstalled,
-        isSubmittingTx,
-        txStatus,
-        error,
         play,
         requestAddresses,
         changeBid,
