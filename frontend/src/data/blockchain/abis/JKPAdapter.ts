@@ -5,6 +5,25 @@ export const abi = [
     type: 'constructor',
   },
   {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'player',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'string',
+        name: 'result',
+        type: 'string',
+      },
+    ],
+    name: 'Played',
+    type: 'event',
+  },
+  {
     inputs: [],
     name: 'getBalance',
     outputs: [
@@ -38,6 +57,19 @@ export const abi = [
         internalType: 'uint8',
         name: '',
         type: 'uint8',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'getImplementationAddress',
+    outputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
       },
     ],
     stateMutability: 'view',
@@ -86,7 +118,7 @@ export const abi = [
     name: 'owner',
     outputs: [
       {
-        internalType: 'address payable',
+        internalType: 'address',
         name: '',
         type: 'address',
       },
@@ -98,18 +130,12 @@ export const abi = [
     inputs: [
       {
         internalType: 'enum JKPLibrary.Options',
-        name: 'newOption',
+        name: 'newChoice',
         type: 'uint8',
       },
     ],
     name: 'play',
-    outputs: [
-      {
-        internalType: 'string',
-        name: '',
-        type: 'string',
-      },
-    ],
+    outputs: [],
     stateMutability: 'payable',
     type: 'function',
   },
@@ -135,6 +161,19 @@ export const abi = [
       },
     ],
     name: 'setCommission',
+    outputs: [],
+    stateMutability: 'nonpayable',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'newImplementation',
+        type: 'address',
+      },
+    ],
+    name: 'upgrade',
     outputs: [],
     stateMutability: 'nonpayable',
     type: 'function',

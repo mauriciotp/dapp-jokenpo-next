@@ -2,17 +2,48 @@
 
 import { useWalletActionsContext } from '@/contexts/wallet-actions-context'
 import { getResult } from '@/data/blockchain/actions/contract/read-actions'
-import { Options } from '@/data/types'
+import { Options, PlayedEvent } from '@/data/types'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Image from 'next/image'
-import { useState } from 'react'
-import { ContractFunctionExecutionError } from 'viem'
+import { useEffect, useState } from 'react'
+import {
+  ContractFunctionExecutionError,
+  ParseAbiItem,
+  WatchEventOnLogsParameter,
+} from 'viem'
 
 export function GameControls() {
-  const { play } = useWalletActionsContext()
+  const { play, watchPlayEvent, walletClient } = useWalletActionsContext()
   const [customPlayError, setCustomPlayError] =
     useState<ContractFunctionExecutionError | null>(null)
+  const [logs, setLogs] = useState<WatchEventOnLogsParameter<
+    ParseAbiItem<PlayedEvent>
+  > | null>(null)
+
   const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (!walletClient) {
+      return
+    }
+
+    const unwatch = watchPlayEvent(setLogs)
+
+    async function invalidateQueries() {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['gameResult'] }),
+        queryClient.invalidateQueries({ queryKey: ['leaderboard'] }),
+      ])
+    }
+
+    if (logs) {
+      invalidateQueries()
+    }
+
+    return () => {
+      unwatch()
+    }
+  }, [logs, walletClient, queryClient, watchPlayEvent])
 
   const { data: gameResult, isPending: isPendingGameResult } = useQuery({
     queryKey: ['gameResult'],
@@ -28,8 +59,11 @@ export function GameControls() {
     mutationFn: async (option: Options) => {
       return await play(option)
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['gameResult'] })
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['gameResult'] }),
+        queryClient.invalidateQueries({ queryKey: ['leaderboard'] }),
+      ])
     },
     onError: (error) => {
       if (error instanceof ContractFunctionExecutionError) {

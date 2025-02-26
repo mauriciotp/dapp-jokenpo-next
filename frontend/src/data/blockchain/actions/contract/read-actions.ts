@@ -1,7 +1,7 @@
 'use server'
 
 import { createPublicClient, getContract, http } from 'viem'
-import { abi } from '../../abis/JoKenPo'
+import { abi } from '../../abis/JKPAdapter'
 import { env } from '@/env'
 import { sepolia } from 'viem/chains'
 import { serverEnv } from '@/serverEnv'
@@ -12,8 +12,8 @@ const publicClient = createPublicClient({
 })
 
 const contract = getContract({
-  abi: abi,
-  address: `0x${env.NEXT_PUBLIC_CONTRACT_ADDRESS}`,
+  abi,
+  address: `0x${env.NEXT_PUBLIC_ADAPTER_CONTRACT_ADDRESS}`,
   client: publicClient,
 })
 

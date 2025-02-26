@@ -3,23 +3,40 @@
 import 'viem/window'
 import { createContext, useContext, useEffect, useMemo, useState } from 'react'
 import {
+  Chain,
   ContractFunctionExecutionErrorType,
   createWalletClient,
   custom,
   EIP1193Provider,
   getContract,
+  ParseAbiItem,
+  parseAbiItem,
   parseEther,
+  publicActions,
   RequestAddressesReturnType,
   TransactionReceipt,
+  WatchEventOnLogsParameter,
+  WatchEventReturnType,
 } from 'viem'
 import { sepolia } from 'viem/chains'
-import { abi } from '@/data/blockchain/abis/JoKenPo'
+import { abi } from '@/data/blockchain/abis/JKPAdapter'
 import { env } from '@/env'
-import { Options } from '@/data/types'
+import { Options, PlayedEvent } from '@/data/types'
 import {
   getBid,
   waitForTransactionReceipt,
 } from '@/data/blockchain/actions/contract/read-actions'
+
+const createWalletClientInstance = (
+  chain: Chain,
+  provider: EIP1193Provider | null,
+) => {
+  if (!provider) return null
+  return createWalletClient({
+    chain,
+    transport: custom(provider),
+  })
+}
 
 interface WalletActionsContextProps {
   isMetamaskInstalled: boolean
@@ -27,6 +44,15 @@ interface WalletActionsContextProps {
   play: (option: Options) => Promise<TransactionReceipt>
   changeBid: (newBid: string) => Promise<TransactionReceipt>
   changeCommission: (newCommission: string) => Promise<TransactionReceipt>
+  upgradeContract: (
+    newContractAddress: `0x${string}`,
+  ) => Promise<TransactionReceipt>
+  watchPlayEvent: (
+    callbackFn: (
+      logs: WatchEventOnLogsParameter<ParseAbiItem<PlayedEvent>>,
+    ) => void,
+  ) => WatchEventReturnType
+  walletClient: ReturnType<typeof createWalletClientInstance>
 }
 
 const WalletActionsContext = createContext<WalletActionsContextProps>(
@@ -46,27 +72,20 @@ export function WalletActionsProvider({
       setIsMetamaskInstalled(true)
       setEthereum(window.ethereum)
     }
-  }, [ethereum])
+  }, [])
 
-  const walletClient = useMemo(() => {
-    if (ethereum) {
-      return createWalletClient({
-        chain: sepolia,
-        transport: custom(ethereum),
-      })
-    }
-    return null
-  }, [ethereum])
+  const walletClient = useMemo(
+    () => createWalletClientInstance(sepolia, ethereum),
+    [ethereum],
+  )
 
   const contract = useMemo(() => {
-    if (walletClient) {
-      return getContract({
-        abi,
-        address: `0x${env.NEXT_PUBLIC_CONTRACT_ADDRESS}`,
-        client: walletClient,
-      })
-    }
-    return null
+    if (!walletClient) return null
+    return getContract({
+      abi,
+      address: `0x${env.NEXT_PUBLIC_ADAPTER_CONTRACT_ADDRESS}`,
+      client: walletClient,
+    })
   }, [walletClient])
 
   const requestAddresses = async () => {
@@ -145,6 +164,49 @@ export function WalletActionsProvider({
     }
   }
 
+  const upgradeContract = async (newContractAddress: `0x${string}`) => {
+    if (!walletClient || !contract) {
+      throw new Error('Wallet client or contract not initialized')
+    }
+
+    try {
+      const [address] = await walletClient.getAddresses()
+
+      const hash = await contract.write.upgrade([newContractAddress], {
+        account: address,
+      })
+
+      const txReceipt = await waitForTransactionReceipt(hash)
+
+      return txReceipt
+    } catch (e) {
+      const error = e as ContractFunctionExecutionErrorType
+
+      throw error
+    }
+  }
+
+  const watchPlayEvent = (
+    callbackFn: (
+      logs: WatchEventOnLogsParameter<ParseAbiItem<PlayedEvent>>,
+    ) => void,
+  ) => {
+    if (!walletClient) {
+      throw new Error('Wallet client not initialized.')
+    }
+
+    const unwatch = walletClient.extend(publicActions).watchEvent({
+      event: parseAbiItem(
+        'event Played(address indexed player, string result)',
+      ),
+      onLogs: (logs) => {
+        callbackFn(logs)
+      },
+    })
+
+    return unwatch
+  }
+
   return (
     <WalletActionsContext
       value={{
@@ -153,6 +215,9 @@ export function WalletActionsProvider({
         requestAddresses,
         changeBid,
         changeCommission,
+        upgradeContract,
+        watchPlayEvent,
+        walletClient,
       }}
     >
       {children}
